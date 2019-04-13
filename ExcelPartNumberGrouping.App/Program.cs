@@ -12,7 +12,7 @@ namespace ExcelPartNumberGrouping.App
     {
         public static readonly string PART_NUMBERS_FILE_LOCATION = @"C:\temp\PartNumbers.xlsx";
         public static readonly string FAMILY_PART_NUMBERS_FILE_LOCATION = @"C:\temp\FamilyPartNumbers.xlsx";
-        public static readonly string OUTPUT_FILE_LOCATION = @"C:\temp\Output.xlsx";
+        public static readonly string OUTPUT_FILE_PATH = @"C:\temp";
 
         static void Main(string[] args)
         {
@@ -118,35 +118,52 @@ namespace ExcelPartNumberGrouping.App
         /// </summary>
         private static void GenerateExcelFile(List<FamilyPartNumberGrouped> familyPartNumberGroupeds)
         {
-            using (ExcelPackage excel = new ExcelPackage())
+            int offset = 0;
+            var chunkSize = 500;
+            var chunkCount = Math.Ceiling(familyPartNumberGroupeds.Count / (decimal)chunkSize);
+
+
+            for (int i = 0; i < chunkCount; i++)
             {
-                foreach (var familyGrouped in familyPartNumberGroupeds)
+                var familiesToTake = Math.Min(chunkSize, familyPartNumberGroupeds.Count - i * chunkSize);
+                var chunk = familyPartNumberGroupeds.Skip(offset).Take(familiesToTake).ToArray();
+
+                using (ExcelPackage excel = new ExcelPackage())
                 {
-                    excel.Workbook.Worksheets.Add(familyGrouped.Family.ID);
-
-                    var worksheet = excel.Workbook.Worksheets[familyGrouped.Family.ID];
-
-                    worksheet.Cells[1, 1].Value = "Familia";
-                    worksheet.Cells[1, 2].Value = "Familia Descripcion";
-                    worksheet.Cells[1, 3].Value = "No. Parte";
-                    worksheet.Cells[1, 4].Value = "No. Parte Description";
-
-                    var index = 2;
-
-                    foreach (var childPartNode in familyGrouped.PartNumbers)
+                    foreach (var familyGrouped in chunk)
                     {
-                        worksheet.Cells[index, 1].Value = familyGrouped.Family.ID;
-                        worksheet.Cells[index, 2].Value = familyGrouped.Family.Description;
-                        worksheet.Cells[index, 3].Value = childPartNode.ID;
-                        worksheet.Cells[index, 4].Value = childPartNode.Description;
-                        index++;
+                        excel.Workbook.Worksheets.Add(familyGrouped.Family.ID);
+
+                        var worksheet = excel.Workbook.Worksheets[familyGrouped.Family.ID];
+
+                        worksheet.Cells[1, 1].Value = "Familia";
+                        worksheet.Cells[1, 2].Value = "Familia Descripcion";
+                        worksheet.Cells[1, 3].Value = "No. Parte";
+                        worksheet.Cells[1, 4].Value = "No. Parte Description";
+
+                        var index = 2;
+
+                        foreach (var childPartNode in familyGrouped.PartNumbers)
+                        {
+                            worksheet.Cells[index, 1].Value = familyGrouped.Family.ID;
+                            worksheet.Cells[index, 2].Value = familyGrouped.Family.Description;
+                            worksheet.Cells[index, 3].Value = childPartNode.ID;
+                            worksheet.Cells[index, 4].Value = childPartNode.Description;
+                            index++;
+                        }
                     }
+
+                    FileInfo excelFile = new FileInfo($"{OUTPUT_FILE_PATH}\\Output_{i}.xlsx");
+                    excel.SaveAs(excelFile);
+
                 }
 
-                FileInfo excelFile = new FileInfo(OUTPUT_FILE_LOCATION);
-                excel.SaveAs(excelFile);
-
+                offset += (chunk.Length);
             }
+
+
+
+            
 
         }
 
