@@ -24,6 +24,7 @@ namespace ExcelPartNumberGrouping.App
                 // 2.- Get Part Numbers
                 List<PartNumber> partNumbers = GetPartNumbers();
 
+
                 // 3 .- Get Group Part Numbers by Family
                 List<FamilyPartNumberGrouped> familyPartNumberGroupeds = GroupFamilyPartNumbers(families, partNumbers);
 
