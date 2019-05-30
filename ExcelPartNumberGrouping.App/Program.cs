@@ -32,6 +32,7 @@ namespace ExcelPartNumberGrouping.App
                 GenerateExcelFile(familyPartNumberGroupeds);
 
                 Console.WriteLine("Completed..");
+                
                 Console.ReadKey();
             }
             catch (Exception error)
